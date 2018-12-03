@@ -90,19 +90,12 @@ public class Launcher {
 				if (result.getEntries().size() > 0) {
 					showMainPanel(frame, loadingPanel, result);
 				} else {
-					try {
-						GlobalScreen.unregisterNativeHook();
-					} catch (NativeHookException e) {
-					}
-					frame.dispose();
-					JOptionPane.showMessageDialog(null, "No entries found", "KIN Event Keyer", JOptionPane.PLAIN_MESSAGE);
+					fatalError(frame, "No entries found");
 				}
 			} catch (InvalidFormatException e) {
-				JOptionPane.showMessageDialog(null, "Invalid file format", "Error", JOptionPane.PLAIN_MESSAGE);
-				frame.dispose();
+				fatalError(frame, "Invalid file format");
 			} catch (IOException e) {
-				JOptionPane.showMessageDialog(null, e.getMessage(), "Error", JOptionPane.PLAIN_MESSAGE);
-				frame.dispose();
+				fatalError(frame, e.getMessage());
 			}
 		}
 	}
@@ -146,6 +139,15 @@ public class Launcher {
 			}
 			
 		});
+	}
+	
+	private static void fatalError(JFrame frame, String message) {
+		JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.PLAIN_MESSAGE);
+		frame.dispose();
+		try {
+			GlobalScreen.unregisterNativeHook();
+		} catch (NativeHookException ex) {
+		}
 	}
 	
 	private static String getExtension(File file) {
