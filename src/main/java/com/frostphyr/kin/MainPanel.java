@@ -103,8 +103,8 @@ public class MainPanel extends JPanel {
 		currentIndexTextField.setColumns(4);
 		((AbstractDocument) currentIndexTextField.getDocument()).setDocumentFilter(currentIndexDocumentFilter);
 		sizeLabel.setText("/" + result.getEntries().size());
-		previousButton.addActionListener(new NavigationActionListener(-2));
-		nextButton.addActionListener(new NavigationActionListener(0));
+		previousButton.addActionListener(new NavigationActionListener(-1));
+		nextButton.addActionListener(new NavigationActionListener(1));
 		JPanel countPanel = new JPanel();
 		countPanel.add(previousButton);
 		countPanel.add(currentIndexTextField);
@@ -162,7 +162,7 @@ public class MainPanel extends JPanel {
 		
 		
 		try {
-			int index = Integer.parseInt(text);
+			int index = Integer.parseInt(text) - 1;
 			if (index >= 0 && index < result.getEntries().size()) {
 				return index;
 			}
