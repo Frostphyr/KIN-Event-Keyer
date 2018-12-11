@@ -160,7 +160,6 @@ public class MainPanel extends JPanel {
 			return 0;
 		}
 		
-		
 		try {
 			int index = Integer.parseInt(text) - 1;
 			if (index >= 0 && index < result.getEntries().size()) {
@@ -214,6 +213,8 @@ public class MainPanel extends JPanel {
 
 				@Override
 				public void onFinish() {
+					stop();
+					
 					long ms = System.currentTimeMillis() - startTime;
 					long s = TimeUnit.MILLISECONDS.toSeconds(ms) % 60;
 					long m = TimeUnit.MILLISECONDS.toMinutes(ms) % 60;
