@@ -43,6 +43,10 @@ public class Launcher {
 
 				@Override
 				public boolean accept(File file) {
+					if (file.isDirectory()) {
+						return true;
+					}
+					
 					String extension = getExtension(file);
 					return extension != null && extension.equalsIgnoreCase("xlsx");
 				}
