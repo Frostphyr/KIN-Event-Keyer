@@ -23,7 +23,6 @@ public class Launcher {
 		Logger.getLogger(GlobalScreen.class.getPackage().getName()).setLevel(Level.OFF);
 		try {
 			GlobalScreen.registerNativeHook();
-			
 		} catch (NativeHookException e) {
 		}
 		
@@ -32,83 +31,78 @@ public class Launcher {
 		} catch (Exception e) {
 		}
 		
-		File eventFile = null;
-		File file = new File("event.xlsx");
-		if (file.exists()) {
-			eventFile = file;
-		} else {
-			JFileChooser chooser = new JFileChooser();
-			chooser.setAcceptAllFileFilterUsed(false);
-			chooser.setFileFilter(new FileFilter() {
+		JFileChooser chooser = new JFileChooser();
+		chooser.setAcceptAllFileFilterUsed(false);
+		chooser.setFileFilter(new FileFilter() {
 
-				@Override
-				public boolean accept(File file) {
-					if (file.isDirectory()) {
-						return true;
-					}
-					
-					String extension = getExtension(file);
-					return extension != null && extension.equalsIgnoreCase("xlsx");
-				}
-
-				@Override
-				public String getDescription() {
-					return "XLSX File";
+			@Override
+			public boolean accept(File file) {
+				if (file.isDirectory()) {
+					return true;
 				}
 				
-			});
-			int option = chooser.showOpenDialog(null);
-			if (option == JFileChooser.APPROVE_OPTION) {
-				eventFile = chooser.getSelectedFile();
-			} else {
-				try {
-					GlobalScreen.unregisterNativeHook();
-				} catch (NativeHookException e) {
-				}
+				String extension = getExtension(file);
+				return extension != null && extension.equalsIgnoreCase("xlsx");
+			}
+
+			@Override
+			public String getDescription() {
+				return "XLSX File";
+			}
+			
+		});
+		
+		int option = chooser.showOpenDialog(null);
+		if (option == JFileChooser.APPROVE_OPTION) {
+			loadFile(chooser.getSelectedFile());
+		} else {
+			try {
+				GlobalScreen.unregisterNativeHook();
+			} catch (NativeHookException e) {
 			}
 		}
+	}
+	
+	private static void loadFile(File file) {
+		final JFrame frame = new JFrame("KIN Event Keyer");
+		final JPanel loadingPanel = new LoadingPanel();
+		showLoadingPanel(frame, loadingPanel);
 		
-		if (eventFile != null) {
-			final JFrame frame = new JFrame("KIN Event Keyer");
-			final JPanel loadingPanel = new LoadingPanel();
-			showLoadingPanel(frame, loadingPanel);
-			
-			try {
-				EntryParser.Result result = EntryParser.parse(eventFile, "Division", "Category", "Regular Type", "Change");
-				while (result.getType() != EntryParser.Result.SUCCESS) {
-					hideFrame(frame);
-					
-					if (result.getType() == EntryParser.Result.DUPLICATE_COLUMNS) {
-						ColumnSelectionDialog.Result columnResult = new ColumnSelectionDialog(result).getResult();
-						if (columnResult == null) {
-							exit(frame);
-							return;
-						}
-						
-						showLoadingPanel(frame, loadingPanel);
-						result = EntryParser.parse(eventFile, columnResult, result.getHeaderRow());
-					} else {
-						ColumnInputDialog.Result columnResult = new ColumnInputDialog().getResult();
-						if (columnResult == null) {
-							exit(frame);
-							return;
-						}
-						
-						showLoadingPanel(frame, loadingPanel);
-						result = EntryParser.parse(eventFile, columnResult);
-					}
-				}
+		try {
+			EntryParser.Result result = EntryParser.parse(file, "Division", "Category", "Regular Type", "Change");
+			while (result.getType() != EntryParser.Result.SUCCESS) {
+				hideFrame(frame);
 				
-				if (result.getEntries().size() > 0) {
-					showMainPanel(frame, loadingPanel, result);
+				if (result.getType() == EntryParser.Result.DUPLICATE_COLUMNS) {
+					ColumnSelectionDialog.Result columnResult = new ColumnSelectionDialog(result).getResult();
+					if (columnResult == null) {
+						exit(frame);
+						return;
+					}
+					
+					showLoadingPanel(frame, loadingPanel);
+					result = EntryParser.parse(file, columnResult, result.getHeaderRow());
 				} else {
-					fatalError(frame, "No entries found");
+					ColumnInputDialog.Result columnResult = new ColumnInputDialog().getResult();
+					if (columnResult == null) {
+						exit(frame);
+						return;
+					}
+					
+					showLoadingPanel(frame, loadingPanel);
+					result = EntryParser.parse(file, columnResult);
 				}
-			} catch (InvalidFormatException e) {
-				fatalError(frame, "Invalid file format");
-			} catch (IOException e) {
-				fatalError(frame, e.getMessage());
 			}
+			
+			if (result.getEntries().size() > 0) {
+				showMainPanel(frame, loadingPanel, result);
+			} else {
+				fatalError(frame, "No entries found");
+			}
+		} catch (InvalidFormatException e) {
+			fatalError(frame, "Invalid file format");
+		} catch (IOException e) {
+			fatalError(frame, e.getMessage());
 		}
 	}
 	
