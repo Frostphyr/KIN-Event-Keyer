@@ -22,37 +22,42 @@ public class EntryParser {
 			workbook = new XSSFWorkbook(file);
 			Sheet sheet = workbook.getSheetAt(0);
 			for (Row r : sheet) {
-				int divisionColumn = -1;
-				int categoryColumn = -1;
-				int percentColumn = -1;
-				int changeColumn = -1;
+				List<Integer> divisionColumns = new ArrayList<Integer>();
+				List<Integer> categoryColumns = new ArrayList<Integer>();
+				List<Integer> percentColumns = new ArrayList<Integer>();
+				List<Integer> changeColumns = new ArrayList<Integer>();
 				for (Cell c : r) {
 					if (c != null && c.getCellTypeEnum() == CellType.STRING) {
 						String text = c.getStringCellValue();
 						if (containsIgnoreCase(text, division)) {
-							divisionColumn = c.getColumnIndex();
+							divisionColumns.add(c.getColumnIndex());
 						} else if (containsIgnoreCase(text, category)) {
-							categoryColumn = c.getColumnIndex();
+							categoryColumns.add(c.getColumnIndex());
 						} else if (containsIgnoreCase(text, percent)) {
-							percentColumn = c.getColumnIndex();
+							percentColumns.add(c.getColumnIndex());
 						} else if (containsIgnoreCase(text, change)) {
-							changeColumn = c.getColumnIndex();
+							changeColumns.add(c.getColumnIndex());
 						}
 					}
 				}
 				
-				if (divisionColumn != -1 && categoryColumn != -1 && percentColumn != -1 && changeColumn != -1) {
-					Result result = parse(sheet, divisionColumn, categoryColumn, percentColumn, changeColumn, r.getRowNum());
+				if (divisionColumns.size() == 1 && categoryColumns.size() == 1 && percentColumns.size() == 1 && changeColumns.size() == 1) {
+					Result result = parse(sheet, divisionColumns.get(0), categoryColumns.get(0), percentColumns.get(0), changeColumns.get(0), r.getRowNum());
+					workbook.close();
+					return result;
+				} else if (divisionColumns.size() >= 1 && categoryColumns.size() >= 1 && percentColumns.size() >= 1 && changeColumns.size() >= 1) {
+					Result result = new Result(divisionColumns, categoryColumns, percentColumns, changeColumns, r.getRowNum());
 					workbook.close();
 					return result;
 				} else {
-					divisionColumn = -1;
-					categoryColumn = -1;
-					percentColumn = -1;
+					divisionColumns.clear();
+					categoryColumns.clear();
+					percentColumns.clear();
+					changeColumns.clear();
 				}
 			}
 			workbook.close();
-			return null;
+			return new Result();
 		} catch (IOException e) {
 			if (workbook != null) {
 				workbook.close();
@@ -65,11 +70,26 @@ public class EntryParser {
 		return parse(file, result.getDepartment(), result.getCategory(), result.getPercent(), result.getChange());
 	}
 	
-	private static Result parse(Sheet sheet, int divisionColumn, int categoryColumn, int percentColumn, int changeColumn, int headerRow) {
+	public static Result parse(File file, ColumnSelectionDialog.Result columns, int headerRow) throws InvalidFormatException, IOException {
+		Workbook workbook = null;
+		try {
+			workbook = new XSSFWorkbook(file);
+			Result result = parse(workbook.getSheetAt(0), columns.getDivisionColumn(), columns.getCategoryColumn(), columns.getPercentColumn(), columns.getChangeColumn(), headerRow);
+			workbook.close();
+			return result;
+		} catch (IOException e) {
+			if (workbook != null) {
+				workbook.close();
+			}
+			throw e;
+		}
+	}
+	
+	public static Result parse(Sheet sheet, int divisionColumn, int categoryColumn, int percentColumn, int changeColumn, int headerRow) {
 		List<Entry> entries = new ArrayList<Entry>();
 		List<String[]> entryErrors = new ArrayList<String[]>();
 		for (Row r : sheet) {
-			if (headerRow == -1 || r.getRowNum() != headerRow) {
+			if (headerRow == -1 || r.getRowNum() > headerRow) {
 				Cell changeCell = r.getCell(changeColumn);
 				if (changeCell != null && changeCell.getCellTypeEnum() == CellType.STRING && containsIgnoreCase(changeCell.getStringCellValue(), "Change")) {
 					String division = getCellString(r.getCell(divisionColumn));
@@ -157,12 +177,42 @@ public class EntryParser {
 	
 	public static class Result {
 		
+		public static final int SUCCESS = 0;
+		public static final int DUPLICATE_COLUMNS = 1;
+		public static final int INVALID_COLUMNS = 2;
+		
+		private int type;
+		
 		private List<Entry> entries;
 		private List<String[]> entryErrors;
 		
+		private List<Integer> divisionColumns;
+		private List<Integer> categoryColumns;
+		private List<Integer> percentColumns;
+		private List<Integer> changeColumns;
+		private int headerRow;
+		
 		private Result(List<Entry> entries, List<String[]> entryErrors) {
+			this.type = SUCCESS;
 			this.entries = entries;
 			this.entryErrors = entryErrors;
+		}
+		
+		private Result(List<Integer> divisionColumns, List<Integer> categoryColumns, List<Integer> percentColumns, List<Integer> changeColumns, int headerRow) {
+			this.type = DUPLICATE_COLUMNS;
+			this.divisionColumns = divisionColumns;
+			this.categoryColumns = categoryColumns;
+			this.percentColumns = percentColumns;
+			this.changeColumns = changeColumns;
+			this.headerRow = headerRow;
+		}
+		
+		private Result() {
+			type = INVALID_COLUMNS;
+		}
+		
+		public int getType() {
+			return type;
 		}
 		
 		public List<Entry> getEntries() {
@@ -171,6 +221,26 @@ public class EntryParser {
 		
 		public List<String[]> getEntryErrors() {
 			return entryErrors;
+		}
+		
+		public List<Integer> getDivisionColumns() {
+			return divisionColumns;
+		}
+		
+		public List<Integer> getCategoryColumns() {
+			return categoryColumns;
+		}
+		
+		public List<Integer> getPercentColumns() {
+			return percentColumns;
+		}
+		
+		public List<Integer> getChangeColumns() {
+			return changeColumns;
+		}
+		
+		public int getHeaderRow() {
+			return headerRow;
 		}
 		
 	}

@@ -75,20 +75,28 @@ public class Launcher {
 			
 			try {
 				EntryParser.Result result = EntryParser.parse(eventFile, "Division", "Category", "Regular Type", "Change");
-				while (result == null) {
+				while (result.getType() != EntryParser.Result.SUCCESS) {
 					hideFrame(frame);
-					ColumnInputDialog.Result columnResult = new ColumnInputDialog().getResult();
-					if (columnResult == null) {
-						try {
-							GlobalScreen.unregisterNativeHook();
-						} catch (NativeHookException e) {
-						}
-						frame.dispose();
-						return;
-					}
 					
-					showLoadingPanel(frame, loadingPanel);
-					result = EntryParser.parse(eventFile, columnResult);
+					if (result.getType() == EntryParser.Result.DUPLICATE_COLUMNS) {
+						ColumnSelectionDialog.Result columnResult = new ColumnSelectionDialog(result).getResult();
+						if (columnResult == null) {
+							exit(frame);
+							return;
+						}
+						
+						showLoadingPanel(frame, loadingPanel);
+						result = EntryParser.parse(eventFile, columnResult, result.getHeaderRow());
+					} else {
+						ColumnInputDialog.Result columnResult = new ColumnInputDialog().getResult();
+						if (columnResult == null) {
+							exit(frame);
+							return;
+						}
+						
+						showLoadingPanel(frame, loadingPanel);
+						result = EntryParser.parse(eventFile, columnResult);
+					}
 				}
 				
 				if (result.getEntries().size() > 0) {
@@ -145,13 +153,17 @@ public class Launcher {
 		});
 	}
 	
-	private static void fatalError(JFrame frame, String message) {
-		JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.PLAIN_MESSAGE);
+	private static void exit(JFrame frame) {
 		frame.dispose();
 		try {
 			GlobalScreen.unregisterNativeHook();
 		} catch (NativeHookException ex) {
 		}
+	}
+	
+	private static void fatalError(JFrame frame, String message) {
+		JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.PLAIN_MESSAGE);
+		exit(frame);
 	}
 	
 	private static String getExtension(File file) {
