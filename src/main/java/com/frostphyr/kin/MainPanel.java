@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -44,6 +45,7 @@ public class MainPanel extends JPanel {
 	private JFormattedTextField currentIndexTextField = new JFormattedTextField();
 	private JLabel sizeLabel = new JLabel();
 	
+	private JComboBox typeComboBox = new JComboBox(new String[] {"Non-Clearance", "Clearance", "Both"});
 	private JFormattedTextField initialDelayTextField = new JFormattedTextField();
 	private JFormattedTextField keyDelayTextField = new JFormattedTextField();
 	private JCheckBox reminderCheckBox = new JCheckBox("Online order reminder");
@@ -113,13 +115,14 @@ public class MainPanel extends JPanel {
 		add(countPanel, "span, center, wrap");
 		add(new JSeparator(SwingConstants.HORIZONTAL), "span, growx, wrap");
 		
+		add(typeComboBox, "span, growx, wrap");
 		initialDelayTextField.setColumns(4);
 		keyDelayTextField.setColumns(4);
 		((AbstractDocument) initialDelayTextField.getDocument()).setDocumentFilter(numericDocumentFilter);
 		((AbstractDocument) keyDelayTextField.getDocument()).setDocumentFilter(numericDocumentFilter);
-		add(new JLabel("Initial delay (ms)"), "span, split 2");
+		add(new JLabel("Initial delay (ms): "), "span, split 2");
 		add(initialDelayTextField, "pushx, growx, wrap");
-		add(new JLabel("Key delay (ms)"), "span, split 2");
+		add(new JLabel("Key delay (ms): "), "span, split 2");
 		add(keyDelayTextField, "pushx, growx, wrap");
 		add(reminderCheckBox, "span, wrap");
 		
@@ -197,7 +200,7 @@ public class MainPanel extends JPanel {
 		try {
 			final int index = getCurrentIndex();
 			final long startTime = System.currentTimeMillis();
-			keyer = new EntryKeyer(result.getEntries(), initialDelay, keyDelay, reminderCheckBox.isSelected(), new EntryKeyer.Callback() {
+			keyer = new EntryKeyer(result.getEntries(), typeComboBox.getSelectedIndex(), initialDelay, keyDelay, reminderCheckBox.isSelected(), new EntryKeyer.Callback() {
 
 				@Override
 				public void onNextEntry(Entry entry, final int index) {

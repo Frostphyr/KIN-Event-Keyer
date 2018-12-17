@@ -12,17 +12,23 @@ import java.util.concurrent.Executors;
 
 public class EntryKeyer {
 	
+	public static final int NON_CLEARANCE = 0;
+	public static final int CLEARANCE = 1;
+	public static final int BOTH = 2;
+	
 	private ExecutorService executor = Executors.newSingleThreadExecutor();
 	private Robot robot;
 	
 	private List<Entry> entries;
 	private Callback callback;
+	private int type;
 	private int initialDelay;
 	private int keyDelay;
 	private boolean reminderDelay;
 	
-	public EntryKeyer(List<Entry> entries, int initialDelay, int keyDelay, boolean reminderDelay, Callback callback) throws AWTException {
+	public EntryKeyer(List<Entry> entries, int type, int initialDelay, int keyDelay, boolean reminderDelay, Callback callback) throws AWTException {
 		this.entries = entries;
+		this.type = type;
 		this.initialDelay = initialDelay;
 		this.keyDelay = keyDelay;
 		this.reminderDelay = reminderDelay;
@@ -46,9 +52,13 @@ public class EntryKeyer {
 						keyType(KeyEvent.VK_ENTER);
 						typeString(entry.getCategory());
 						keyType(KeyEvent.VK_ENTER);
-						typeString(entry.getPercent());
-						keyType(KeyEvent.VK_ENTER);
-						typeString(entry.getPercent());
+						if (type != CLEARANCE) {
+							typeString(entry.getPercent());
+						}
+						if (type != NON_CLEARANCE) {
+							keyType(KeyEvent.VK_ENTER);
+							typeString(entry.getPercent());
+						}
 						keyType(KeyEvent.VK_F12);
 						keyType(KeyEvent.VK_F12);
 					}
