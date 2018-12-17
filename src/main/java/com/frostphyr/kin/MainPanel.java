@@ -134,6 +134,10 @@ public class MainPanel extends JPanel {
 		buttonPanel.add(stopButton);
 		add(buttonPanel, "span, dock center");
 		
+		add(new JSeparator(SwingConstants.HORIZONTAL), "span, growx, wrap");
+		add(new JLabel("(c) Jon Mannerberg"), "align center, span");
+		add(new JLabel("jon.mannerberg@gmail.com"), "align center, span");
+		
 		setCurrentEntry(0, true);
 		
 		GlobalScreen.addNativeKeyListener(nativeKeyListener);
