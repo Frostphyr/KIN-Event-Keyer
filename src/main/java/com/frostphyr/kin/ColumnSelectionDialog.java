@@ -28,7 +28,7 @@ public class ColumnSelectionDialog extends JDialog {
 	private JComboBox changeComboBox;
 	
 	public ColumnSelectionDialog(EntryParser.Result parserResult) {
-		super((Frame) null, true);
+		super((Frame) null, "KIN Event Keyer", true);
 		
 		this.parserResult = parserResult;
 		

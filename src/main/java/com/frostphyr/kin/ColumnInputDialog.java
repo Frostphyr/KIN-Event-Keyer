@@ -25,7 +25,7 @@ public class ColumnInputDialog extends JDialog {
 	private Result result;
 	
 	public ColumnInputDialog() {
-		super((Frame) null, true);
+		super((Frame) null, "KIN Event Keyer", true);
 		
 		init();
 	}
