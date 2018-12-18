@@ -110,7 +110,7 @@ public class EntryParser {
 						entryErrors.add(getColumns(r));
 						continue;
 					} else {
-						percent = Integer.toString((int) (r.getCell(percentColumn).getNumericCellValue() * 100));
+						percent = Long.toString(Math.round((r.getCell(percentColumn).getNumericCellValue() * 100)));
 					}
 					
 					entries.add(new Entry(division, category, percent));
