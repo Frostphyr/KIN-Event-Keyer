@@ -14,6 +14,9 @@ import javax.swing.UIManager;
 import javax.swing.filechooser.FileFilter;
 
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 
@@ -69,7 +72,24 @@ public class Launcher {
 		showLoadingPanel(frame, loadingPanel);
 		
 		try {
-			EntryParser.Result result = EntryParser.parse(file, "Division", "Category", "Regular Type", "Change");
+			Workbook workbook = new XSSFWorkbook(file);
+			Sheet sheet = null;
+			if (workbook.getNumberOfSheets() > 1) {
+				hideFrame(frame);
+				int index = new SheetSelectionDialog(workbook).getIndex();
+				if (index == -1) {
+					exit(frame);
+					return;
+				} else {
+					sheet = workbook.getSheetAt(index);
+				}
+			} else {
+				sheet = workbook.getSheetAt(0);
+			}
+			
+			showLoadingPanel(frame, loadingPanel);
+			
+			EntryParser.Result result = EntryParser.parse(sheet, "Division", "Category", "Regular Type", "Change");
 			while (result.getType() != EntryParser.Result.SUCCESS) {
 				hideFrame(frame);
 				
@@ -81,7 +101,7 @@ public class Launcher {
 					}
 					
 					showLoadingPanel(frame, loadingPanel);
-					result = EntryParser.parse(file, columnResult, result.getHeaderRow());
+					result = EntryParser.parse(sheet, columnResult, result.getHeaderRow());
 				} else {
 					ColumnInputDialog.Result columnResult = new ColumnInputDialog().getResult();
 					if (columnResult == null) {
@@ -90,7 +110,7 @@ public class Launcher {
 					}
 					
 					showLoadingPanel(frame, loadingPanel);
-					result = EntryParser.parse(file, columnResult);
+					result = EntryParser.parse(sheet, columnResult);
 				}
 			}
 			

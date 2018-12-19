@@ -1,6 +1,5 @@
 package com.frostphyr.kin;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,78 +10,50 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class EntryParser {
 	
-	public static Result parse(File file, String division, String category, String percent, String change) throws IOException, InvalidFormatException {
-		Workbook workbook = null;
-		try {
-			workbook = new XSSFWorkbook(file);
-			Sheet sheet = workbook.getSheetAt(0);
-			for (Row r : sheet) {
-				List<Integer> divisionColumns = new ArrayList<Integer>();
-				List<Integer> categoryColumns = new ArrayList<Integer>();
-				List<Integer> percentColumns = new ArrayList<Integer>();
-				List<Integer> changeColumns = new ArrayList<Integer>();
-				for (Cell c : r) {
-					if (c != null && c.getCellTypeEnum() == CellType.STRING) {
-						String text = c.getStringCellValue();
-						if (containsIgnoreCase(text, division)) {
-							divisionColumns.add(c.getColumnIndex());
-						} else if (containsIgnoreCase(text, category)) {
-							categoryColumns.add(c.getColumnIndex());
-						} else if (containsIgnoreCase(text, percent)) {
-							percentColumns.add(c.getColumnIndex());
-						} else if (containsIgnoreCase(text, change)) {
-							changeColumns.add(c.getColumnIndex());
-						}
+	public static Result parse(Sheet sheet, String division, String category, String percent, String change) throws IOException, InvalidFormatException {
+		for (Row r : sheet) {
+			List<Integer> divisionColumns = new ArrayList<Integer>();
+			List<Integer> categoryColumns = new ArrayList<Integer>();
+			List<Integer> percentColumns = new ArrayList<Integer>();
+			List<Integer> changeColumns = new ArrayList<Integer>();
+			for (Cell c : r) {
+				if (c != null && c.getCellTypeEnum() == CellType.STRING) {
+					String text = c.getStringCellValue();
+					if (containsIgnoreCase(text, division)) {
+						divisionColumns.add(c.getColumnIndex());
+					} else if (containsIgnoreCase(text, category)) {
+						categoryColumns.add(c.getColumnIndex());
+					} else if (containsIgnoreCase(text, percent)) {
+						percentColumns.add(c.getColumnIndex());
+					} else if (containsIgnoreCase(text, change)) {
+						changeColumns.add(c.getColumnIndex());
 					}
 				}
-				
-				if (divisionColumns.size() == 1 && categoryColumns.size() == 1 && percentColumns.size() == 1 && changeColumns.size() == 1) {
-					Result result = parse(sheet, divisionColumns.get(0), categoryColumns.get(0), percentColumns.get(0), changeColumns.get(0), r.getRowNum());
-					workbook.close();
-					return result;
-				} else if (divisionColumns.size() >= 1 && categoryColumns.size() >= 1 && percentColumns.size() >= 1 && changeColumns.size() >= 1) {
-					Result result = new Result(divisionColumns, categoryColumns, percentColumns, changeColumns, r.getRowNum());
-					workbook.close();
-					return result;
-				} else {
-					divisionColumns.clear();
-					categoryColumns.clear();
-					percentColumns.clear();
-					changeColumns.clear();
-				}
 			}
-			workbook.close();
-			return new Result();
-		} catch (IOException e) {
-			if (workbook != null) {
-				workbook.close();
+			
+			if (divisionColumns.size() == 1 && categoryColumns.size() == 1 && percentColumns.size() == 1 && changeColumns.size() == 1) {
+				return parse(sheet, divisionColumns.get(0), categoryColumns.get(0), percentColumns.get(0), changeColumns.get(0), r.getRowNum());
+			} else if (divisionColumns.size() >= 1 && categoryColumns.size() >= 1 && percentColumns.size() >= 1 && changeColumns.size() >= 1) {
+				return new Result(divisionColumns, categoryColumns, percentColumns, changeColumns, r.getRowNum());
+			} else {
+				divisionColumns.clear();
+				categoryColumns.clear();
+				percentColumns.clear();
+				changeColumns.clear();
 			}
-			throw e;
 		}
+		return new Result();
 	}
 	
-	public static Result parse(File file, ColumnInputDialog.Result result) throws InvalidFormatException, IOException {
-		return parse(file, result.getDepartment(), result.getCategory(), result.getPercent(), result.getChange());
+	public static Result parse(Sheet sheet, ColumnInputDialog.Result result) throws InvalidFormatException, IOException {
+		return parse(sheet, result.getDepartment(), result.getCategory(), result.getPercent(), result.getChange());
 	}
 	
-	public static Result parse(File file, ColumnSelectionDialog.Result columns, int headerRow) throws InvalidFormatException, IOException {
-		Workbook workbook = null;
-		try {
-			workbook = new XSSFWorkbook(file);
-			Result result = parse(workbook.getSheetAt(0), columns.getDivisionColumn(), columns.getCategoryColumn(), columns.getPercentColumn(), columns.getChangeColumn(), headerRow);
-			workbook.close();
-			return result;
-		} catch (IOException e) {
-			if (workbook != null) {
-				workbook.close();
-			}
-			throw e;
-		}
+	public static Result parse(Sheet sheet, ColumnSelectionDialog.Result columns, int headerRow) throws InvalidFormatException, IOException {
+		return parse(sheet, columns.getDivisionColumn(), columns.getCategoryColumn(), columns.getPercentColumn(), columns.getChangeColumn(), headerRow);
 	}
 	
 	public static Result parse(Sheet sheet, int divisionColumn, int categoryColumn, int percentColumn, int changeColumn, int headerRow) {
