@@ -89,7 +89,7 @@ public class Launcher {
 			
 			showLoadingPanel(frame, loadingPanel);
 			
-			EntryParser.Result result = EntryParser.parse(sheet, "Division", "Category", "Regular Type", "Change");
+			EntryParser.Result result = EntryParser.parse(sheet, "Division", "Category", "Type", "Change");
 			while (result.getType() != EntryParser.Result.SUCCESS) {
 				hideFrame(frame);
 				
