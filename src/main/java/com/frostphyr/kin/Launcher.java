@@ -71,14 +71,15 @@ public class Launcher {
 		final JPanel loadingPanel = new LoadingPanel();
 		showLoadingPanel(frame, loadingPanel);
 		
+		Workbook workbook = null;
 		try {
-			Workbook workbook = new XSSFWorkbook(file);
+			workbook = new XSSFWorkbook(file);
 			Sheet sheet = null;
 			if (workbook.getNumberOfSheets() > 1) {
 				hideFrame(frame);
 				int index = new SheetSelectionDialog(workbook).getIndex();
 				if (index == -1) {
-					exit(frame);
+					exit(frame, workbook);
 					return;
 				} else {
 					sheet = workbook.getSheetAt(index);
@@ -96,7 +97,7 @@ public class Launcher {
 				if (result.getType() == EntryParser.Result.DUPLICATE_COLUMNS) {
 					ColumnSelectionDialog.Result columnResult = new ColumnSelectionDialog(result).getResult();
 					if (columnResult == null) {
-						exit(frame);
+						exit(frame, workbook);
 						return;
 					}
 					
@@ -105,7 +106,7 @@ public class Launcher {
 				} else {
 					ColumnInputDialog.Result columnResult = new ColumnInputDialog().getResult();
 					if (columnResult == null) {
-						exit(frame);
+						exit(frame, workbook);
 						return;
 					}
 					
@@ -115,14 +116,15 @@ public class Launcher {
 			}
 			
 			if (result.getEntries().size() > 0) {
+				workbook.close();
 				showMainPanel(frame, loadingPanel, result);
 			} else {
-				fatalError(frame, "No entries found");
+				fatalError(frame, workbook, "No entries found");
 			}
 		} catch (InvalidFormatException e) {
-			fatalError(frame, "Invalid file format");
+			fatalError(frame, workbook, "Invalid file format");
 		} catch (IOException e) {
-			fatalError(frame, e.getMessage());
+			fatalError(frame, workbook, e.getMessage());
 		}
 	}
 	
@@ -167,17 +169,23 @@ public class Launcher {
 		});
 	}
 	
-	private static void exit(JFrame frame) {
+	private static void exit(JFrame frame, Workbook workbook) {
 		frame.dispose();
+		if (workbook != null) {
+			try {
+				workbook.close();
+			} catch (IOException e) {
+			}
+		}
 		try {
 			GlobalScreen.unregisterNativeHook();
 		} catch (NativeHookException ex) {
 		}
 	}
 	
-	private static void fatalError(JFrame frame, String message) {
+	private static void fatalError(JFrame frame, Workbook workbook, String message) {
 		JOptionPane.showMessageDialog(null, message, "Error", JOptionPane.PLAIN_MESSAGE);
-		exit(frame);
+		exit(frame, workbook);
 	}
 	
 	private static String getExtension(File file) {
