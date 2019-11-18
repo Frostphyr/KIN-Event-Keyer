@@ -1,6 +1,7 @@
 package com.frostphyr.kin;
 
 import java.awt.AWTException;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -36,6 +37,8 @@ public class MainPanel extends JPanel {
 
 	private static final long serialVersionUID = 118780168388221726L;
 	
+	private Component parent;
+	
 	private JLabel departmentLabel = new JLabel();
 	private JLabel categoryLabel = new JLabel();
 	private JLabel percentLabel = new JLabel();
@@ -56,9 +59,10 @@ public class MainPanel extends JPanel {
 	private EntryParser.Result result;
 	private EntryKeyer keyer;
 	
-	public MainPanel(EntryParser.Result result) {
+	public MainPanel(Component parent, EntryParser.Result result) {
 		super(new MigLayout());
 		
+		this.parent = parent;
 		this.result = result;
 		init();
 	}
@@ -179,7 +183,7 @@ public class MainPanel extends JPanel {
 	}
 	
 	private void showErrorMessage(String text) {
-		JOptionPane.showMessageDialog(null, text, "Error", JOptionPane.PLAIN_MESSAGE);
+		JOptionPane.showMessageDialog(parent, text, "Error", JOptionPane.PLAIN_MESSAGE);
 	}
 	
 	private void start() {
@@ -220,13 +224,22 @@ public class MainPanel extends JPanel {
 
 				@Override
 				public void onFinish() {
-					stop();
+					SwingUtilities.invokeLater(new Runnable() {
+
+						@Override
+						public void run() {
+							stop();
 					
-					long ms = System.currentTimeMillis() - startTime;
-					long s = TimeUnit.MILLISECONDS.toSeconds(ms) % 60;
-					long m = TimeUnit.MILLISECONDS.toMinutes(ms) % 60;
-					long h = TimeUnit.MILLISECONDS.toHours(ms) % 24;
-					JOptionPane.showMessageDialog(null, (result.getEntries().size() - index) + " entries keyed in " + String.format("%d:%02d:%02d", h,m,s));
+							long ms = System.currentTimeMillis() - startTime;
+							long s = TimeUnit.MILLISECONDS.toSeconds(ms) % 60;
+							long m = TimeUnit.MILLISECONDS.toMinutes(ms) % 60;
+							long h = TimeUnit.MILLISECONDS.toHours(ms) % 24;
+							JOptionPane.showMessageDialog(parent, (result.getEntries().size() - index) + " entries keyed in " + String.format("%d:%02d:%02d", h,m,s),
+									"Finished", JOptionPane.PLAIN_MESSAGE);
+						}
+						
+					});
+					
 				}
 				
 			});

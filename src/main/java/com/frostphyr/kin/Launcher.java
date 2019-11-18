@@ -160,7 +160,7 @@ public class Launcher {
 			@Override
 			public void run() {
 				frame.remove(loadingPanel);
-				frame.add(new MainPanel(result));
+				frame.add(new MainPanel(frame, result));
 				frame.pack();
 				frame.setLocationRelativeTo(null);
 				frame.repaint();
