@@ -4,6 +4,8 @@
 
 KIN Event Keyer is compiled with and is targeted to run on Java SE 6 which can be downloaded [here](https://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase6-419409.html).
 
+**NOTE**: Machines on the Kmart network should already have Java SE 6 installed.
+
 ## File Format
 
 * The event file must an "xlsx" file.
